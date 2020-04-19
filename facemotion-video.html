@@ -1,0 +1,116 @@
+
+<html>
+
+	<head>
+
+		<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+
+	</head>
+
+	<body>
+		<video width=640 height=480 autoplay muted id="camera">
+		</video>
+
+		<canvas width=640 height=480 id="augmented_canvas"> </canvas>
+
+		<video autoplay loop id="movie" style="visibility: hidden">
+			<source src="TensorFlowjs.mp4" type="video/mp4"> </source>
+		</video>
+
+		<script>
+
+			// face tracking to move objects in Virtual / Augmented world
+			async function track_face()
+			{
+				// load camera stream
+				const frame = document.getElementById("camera");
+
+				// load movie stream
+				const movie = document.getElementById("movie");
+				movie.play();
+
+				// prepare canvas
+				const canvas = document.getElementById("augmented_canvas");
+				const draw = canvas.getContext("2d");
+
+				// load blazeface model
+				const model = await blazeface.load();
+
+				// size of media player
+				const w = 250;
+				const h = 150;
+				// default position : top right corner
+				var index_x = canvas.width - w - 10;
+				var index_y = 10;
+
+				while(1)
+				{
+
+					// track face position
+					const result = await model.estimateFaces(frame, false);
+
+					// copy camera stream to canvas
+					draw.drawImage(frame, 0, 0, 640, 480);
+
+					// check if face is detected
+					if(result.length > 0)
+					{
+						
+						     for (let i = 0; i < result.length; i++) {
+							      const start = result[i].topLeft;
+							      const end = result[i].bottomRight;
+							      const size = [end[0] - start[0], end[1] - start[1]];
+
+							      // Render a rectangle over each detected face.
+							     draw.drawImage(movie, start[0], start[1], size[0], size[1]);
+							    }
+   						 
+					}
+
+					// loop to process the next frame
+					await tf.nextFrame();
+				}
+			}
+
+		</script>
+
+		<script>
+
+		function live_webcam()
+		{
+			// capture live video stream from web camera
+			if(navigator.mediaDevices.getUserMedia)
+			{
+				navigator.mediaDevices.getUserMedia({video: true})
+					.then(function (stream) {video.srcObject = stream; });
+			}
+		}
+
+		function main()
+		{
+			// check if the video is loaded and ready for processing
+			video = document.getElementById("camera");
+			if(video.readyState == 4)
+			{
+				console.log("video is ready for processing..");
+				track_face();
+			}
+			else
+			{
+				console.log("nope, not ready yet..");
+				setTimeout(main, 1000/30);
+			}
+		}
+
+		// capture live camera stream
+		live_webcam();
+
+		// detect gestures once the video is ready
+		main();
+
+	  </script>
+
+	</body>
+</html>
