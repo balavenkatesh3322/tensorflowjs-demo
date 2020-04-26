@@ -8,3 +8,5 @@ just open facemotion-video.html file in browser.
 
 ## Demo
 Please checkout my demo vides here[https://youtu.be/djSRxOou7us]
+
+![Faace-tracking Demo](face_track.gif)
